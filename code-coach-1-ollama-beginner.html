@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Coach 1: Ollama Beginner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: #ffffff;
+            border-bottom: 3px solid #4a90e2;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a202c;
+            letter-spacing: -0.5px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn-large {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #357abd;
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f0f4f8;
+            color: #2c3e50;
+            border: 2px solid #cbd5e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e8ecf1;
+            border-color: #4a90e2;
+            transform: translateY(-2px);
+        }
+
+        /* Lesson Navigation */
+        .lesson-nav {
+            background: #f0f4f8;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e6ed;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .lesson-nav::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .lesson-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .lesson-nav::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .lesson-btn {
+            padding: 12px 20px;
+            border: 2px solid #cbd5e0;
+            background: #ffffff;
+            color: #2c3e50;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .lesson-btn:hover {
+            border-color: #4a90e2;
+            color: #4a90e2;
+        }
+
+        .lesson-btn.active {
+            background: #4a90e2;
+            color: #ffffff;
+            border-color: #4a90e2;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+        }
+
+        .lesson-info {
+            padding: 16px 24px;
+            background: #fffbf0;
+            border-bottom: 1px solid #e0e6ed;
+            border-left: 4px solid #f59e0b;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #57606f;
+        }
+
+        /* Main Content */
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        /* Code Editor - LEFT */
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e0e6ed;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* Output - RIGHT */
+        .output-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e0e6ed;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .panel-title {
+            background: #4a90e2;
+            color: #ffffff;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
+            font-size: 14px;
+            resize: none;
+            color: #2c3e50;
+            background: #ffffff;
+            line-height: 1.7;
+        }
+
+        textarea:focus {
+            outline: none;
+            background: #fafbfc;
+        }
+
+        .output-content {
+            flex: 1;
+            padding: 20px;
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #2c3e50;
+            background: #fafbfc;
+            overflow-y: auto;
+            line-height: 1.7;
+        }
+
+        /* Lesson Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e6ed;
+        }
+
+        .modal-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 32px;
+            color: #a0aec0;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #2c3e50;
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            color: #2c3e50;
+            line-height: 1.9;
+            font-size: 15px;
+        }
+
+        .modal-body h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 24px;
+            margin-bottom: 14px;
+            color: #1a202c;
+        }
+
+        .modal-body p {
+            margin-bottom: 14px;
+            color: #57606f;
+        }
+
+        .modal-body ul {
+            margin-left: 28px;
+            margin-bottom: 14px;
+        }
+
+        .modal-body li {
+            margin-bottom: 10px;
+            color: #57606f;
+        }
+
+        .modal-body code {
+            background: #f0f4f8;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'SF Mono', monospace;
+            color: #d63384;
+            font-size: 13px;
+        }
+
+        /* Chat Sidebar */
+        .chat-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: #ffffff;
+            border-left: 1px solid #e0e6ed;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s ease;
+            z-index: 999;
+            box-shadow: -4px 0 16px rgba(0,0,0,0.08);
+        }
+
+        .chat-sidebar.open {
+            right: 0;
+        }
+
+        .chat-header {
+            background: #4a90e2;
+            color: #ffffff;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 0;
+            transition: all 0.2s;
+        }
+
+        .chat-close:hover {
+            transform: scale(1.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .message.user {
+            background: #4a90e2;
+            color: #ffffff;
+            margin-left: 30px;
+            text-align: right;
+        }
+
+        .message.bot {
+            background: #f0f4f8;
+            color: #2c3e50;
+            margin-right: 30px;
+        }
+
+        .chat-input {
+            padding: 16px;
+            border-top: 1px solid #e0e6ed;
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            background: #fafbfc;
+        }
+
+        .chat-input button {
+            padding: 12px 24px;
+            background: #4a90e2;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .chat-input button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .chat-toggle {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: 70px;
+            height: 70px;
+            background: #4a90e2;
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 998;
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+            transition: all 0.2s;
+        }
+
+        .chat-toggle:hover {
+            background: #357abd;
+            box-shadow: 0 8px 28px rgba(74, 144, 226, 0.5);
+            transform: scale(1.1);
+        }
+
+        /* Coach Popup */
+        .coach-popup {
+            position: fixed;
+            bottom: 120px;
+            right: 24px;
+            background: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #4a90e2;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 340px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .coach-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .coach-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .coach-close {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 0;
+            transition: all 0.2s;
+        }
+
+        .coach-close:hover {
+            color: #2c3e50;
+        }
+
+        .coach-message {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #57606f;
+            margin-bottom: 14px;
+        }
+
+        .coach-action {
+            display: flex;
+            gap: 10px;
+        }
+
+        .coach-action button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .coach-action .btn-yes {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .coach-action .btn-yes:hover {
+            background: #357abd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Code Coach 1: Ollama Beginner</h1>
+            <div class="header-buttons">
+                <button class="btn-large btn-secondary" onclick="copyCode()">📋 Copy Code</button>
+                <button class="btn-large btn-primary" onclick="downloadCode()">⬇️ Download</button>
+            </div>
+        </div>
+
+        <!-- Lesson Navigation -->
+        <div class="lesson-nav" id="lessonNav">
+            <button class="lesson-btn active" onclick="switchLesson(0)">1️⃣ Groq</button>
+            <button class="lesson-btn" onclick="switchLesson(1)">2️⃣ API Key</button>
+            <button class="lesson-btn" onclick="switchLesson(2)">3️⃣ ENV</button>
+            <button class="lesson-btn" onclick="switchLesson(3)">4️⃣ Ollama</button>
+            <button class="lesson-btn" onclick="switchLesson(4)">5️⃣ Run Model</button>
+            <button class="lesson-btn" onclick="switchLesson(5)">6️⃣ Templates</button>
+            <button class="lesson-btn" onclick="switchLesson(6)">7️⃣ Security</button>
+            <button class="lesson-btn" onclick="switchLesson(7)">8️⃣ Finish</button>
+        </div>
+
+        <!-- Lesson Info -->
+        <div class="lesson-info" id="lessonInfo">
+            Click a lesson above or the "?" button to read the full explanation
+        </div>
+
+        <!-- Content: Code LEFT + Output RIGHT -->
+        <div class="content-wrapper">
+            <!-- LEFT: Code Editor -->
+            <div class="editor-panel">
+                <div class="panel-title">Code Editor</div>
+                <textarea id="codeEditor" placeholder="Your code..."></textarea>
+            </div>
+
+            <!-- RIGHT: Output -->
+            <div class="output-panel">
+                <div class="panel-title">Output / Result</div>
+                <div id="outputContent" class="output-content">Output will appear here...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lesson Modal -->
+    <div class="modal" id="lessonModal">
+        <div class="modal-content" id="modalBody"></div>
+    </div>
+
+    <!-- Chat Sidebar -->
+    <div class="chat-sidebar" id="chatSidebar">
+        <div class="chat-header">
+            <span>🤖 Ask AI Coach</span>
+            <button class="chat-close" onclick="toggleChat()">✕</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Ask..." onkeypress="handleChatKeyPress(event)">
+            <button onclick="sendChat()">Send</button>
+        </div>
+    </div>
+
+    <!-- Chat Toggle -->
+    <button class="chat-toggle" onclick="toggleChat()">💬</button>
+
+    <!-- Coach Popup -->
+    <div class="coach-popup" id="coachPopup" style="display: none;">
+        <div class="coach-header">
+            <h3>💡 Quick Tip</h3>
+            <button class="coach-close" onclick="closeCoachPopup()">✕</button>
+        </div>
+        <div class="coach-message" id="coachMessage"></div>
+        <div class="coach-action">
+            <button class="btn-yes" onclick="closeCoachPopup()">Got it</button>
+        </div>
+    </div>
+
+    <script>
+        const lessons = [
+            {
+                title: "1. What is Groq?",
+                shortInfo: "Fast, free API for AI models",
+                content: `
+                    <h2>What is Groq?</h2>
+                    <p>Groq is a fast, free API for running large language models.</p>
+                    
+                    <h3>Key Points:</h3>
+                    <ul>
+                        <li><strong>Free:</strong> No cost to get started</li>
+                        <li><strong>Fast:</strong> One of the fastest LLM APIs</li>
+                        <li><strong>Your Key:</strong> You control your own API key</li>
+                        <li><strong>Private:</strong> Your code stays on your computer</li>
+                    </ul>
+
+                    <h3>You'll Learn:</h3>
+                    <ul>
+                        <li>Get your own Groq API key</li>
+                        <li>Store it safely with ENV variables</li>
+                        <li>Use it with Ollama</li>
+                        <li>Build real projects</li>
+                    </ul>
+                `
+            },
+            {
+                title: "2. Get Your Groq API Key",
+                shortInfo: "Sign up for Groq and create your key",
+                content: `
+                    <h2>Getting Your Groq API Key</h2>
+                    
+                    <h3>Step 1: Visit console.groq.com</h3>
+                    <ul>
+                        <li>Go to console.groq.com</li>
+                        <li>Click "Sign Up"</li>
+                        <li>Use email or Google account</li>
+                    </ul>
+
+                    <h3>Step 2: Create API Key</h3>
+                    <ul>
+                        <li>Click "API Keys" in sidebar</li>
+                        <li>Click "Create API Key"</li>
+                        <li>Name it (e.g., "My Local AI")</li>
+                        <li>Click "Generate"</li>
+                    </ul>
+
+                    <h3>Step 3: Save It!</h3>
+                    <ul>
+                        <li>Copy the long key</li>
+                        <li>Save it somewhere safe</li>
+                        <li>You'll never see it again!</li>
+                    </ul>
+
+                    <p><strong>⚠️ Never share your API key!</strong></p>
+                `
+            },
+            {
+                title: "3. ENV Variables",
+                shortInfo: "Safe way to store your API key",
+                content: `
+                    <h2>What are ENV Variables?</h2>
+                    <p>Secret storage boxes for sensitive info like API keys.</p>
+
+                    <h3>Why Use Them?</h3>
+                    <ul>
+                        <li>Keep API key OUT of your code</li>
+                        <li>Protect your secrets</li>
+                        <li>Easy to change later</li>
+                        <li>Industry best practice</li>
+                    </ul>
+
+                    <h3>Windows (Command Prompt):</h3>
+                    <ul>
+                        <li>setx GROQ_API_KEY your_key_here</li>
+                        <li>Restart Command Prompt</li>
+                    </ul>
+
+                    <h3>Mac/Linux (Terminal):</h3>
+                    <ul>
+                        <li>export GROQ_API_KEY=your_key_here</li>
+                    </ul>
+                `
+            },
+            {
+                title: "4. Install Ollama",
+                shortInfo: "Download and install Ollama",
+                content: `
+                    <h2>Installing Ollama</h2>
+                    <p>Run AI models on YOUR computer.</p>
+
+                    <h3>Step 1: Download</h3>
+                    <ul>
+                        <li>Go to ollama.com</li>
+                        <li>Click "Download"</li>
+                        <li>Pick your OS</li>
+                    </ul>
+
+                    <h3>Step 2: Install</h3>
+                    <ul>
+                        <li><strong>Windows:</strong> Run installer</li>
+                        <li><strong>Mac:</strong> Drag to Applications</li>
+                        <li><strong>Linux:</strong> Run script</li>
+                    </ul>
+
+                    <h3>Step 3: Check It Works</h3>
+                    <ul>
+                        <li>Open Terminal</li>
+                        <li>Type: ollama --version</li>
+                        <li>You should see a number</li>
+                    </ul>
+                `
+            },
+            {
+                title: "5. Run Your First Model",
+                shortInfo: "Download and run an AI model",
+                content: `
+                    <h2>Running Your First AI Model</h2>
+                    
+                    <h3>Step 1: Open Terminal</h3>
+                    <ul>
+                        <li>Type: ollama run llama-3.1:8b</li>
+                    </ul>
+
+                    <h3>Step 2: Wait (First Time)</h3>
+                    <ul>
+                        <li>Takes a few minutes</li>
+                        <li>Model is ~4GB</li>
+                        <li>You'll see progress</li>
+                        <li>Then you'll see: >></li>
+                    </ul>
+
+                    <h3>Step 3: Ask It Questions</h3>
+                    <ul>
+                        <li>Type: What is AI?</li>
+                        <li>Press Enter</li>
+                        <li>It responds instantly</li>
+                        <li>Type /exit to quit</li>
+                    </ul>
+
+                    <h3>Other Models:</h3>
+                    <ul>
+                        <li>ollama run mistral</li>
+                        <li>ollama run neural-chat</li>
+                        <li>ollama run codegemma</li>
+                    </ul>
+                `
+            },
+            {
+                title: "6. Code Templates",
+                shortInfo: "Ready-to-use code examples",
+                content: `
+                    <h2>Code Templates</h2>
+                    <p>Copy these templates to get started.</p>
+
+                    <h3>Node.js:</h3>
+                    <ul>
+                        <li>npm install groq-sdk</li>
+                        <li>Create .env with API key</li>
+                        <li>Use template in code editor</li>
+                    </ul>
+
+                    <h3>Browser JavaScript:</h3>
+                    <ul>
+                        <li>Use Fetch API</li>
+                        <li>See template in editor</li>
+                    </ul>
+
+                    <h3>Python:</h3>
+                    <ul>
+                        <li>pip install groq</li>
+                        <li>Load API key from ENV</li>
+                        <li>Make API calls</li>
+                    </ul>
+                `
+            },
+            {
+                title: "7. Security Basics",
+                shortInfo: "Protect your API keys",
+                content: `
+                    <h2>Security: Protect Your Keys</h2>
+                    
+                    <h3>NEVER DO:</h3>
+                    <ul>
+                        <li>❌ Paste key in code</li>
+                        <li>❌ Upload to GitHub</li>
+                        <li>❌ Share on Discord/Slack</li>
+                        <li>❌ Show on screen during stream</li>
+                        <li>❌ Email to anyone</li>
+                    </ul>
+
+                    <h3>ALWAYS DO:</h3>
+                    <ul>
+                        <li>✅ Use ENV variables</li>
+                        <li>✅ Create .env file</li>
+                        <li>✅ Add .env to .gitignore</li>
+                        <li>✅ Rotate key if leaked</li>
+                        <li>✅ Use different keys per project</li>
+                    </ul>
+                `
+            },
+            {
+                title: "8. You Did It!",
+                shortInfo: "Congratulations! You finished!",
+                content: `
+                    <h2>🎉 Congratulations!</h2>
+                    <p>You completed all 8 lessons!</p>
+
+                    <h3>You Learned:</h3>
+                    <ul>
+                        <li>✅ What Groq is</li>
+                        <li>✅ How to get API key</li>
+                        <li>✅ ENV variables</li>
+                        <li>✅ Install Ollama</li>
+                        <li>✅ Run AI models</li>
+                        <li>✅ Code templates</li>
+                        <li>✅ Security best practices</li>
+                    </ul>
+
+                    <h3>What's Next?</h3>
+                    <ul>
+                        <li><strong>Code Coach 2:</strong> Build a real project</li>
+                        <li><strong>Code Coach 3:</strong> Advanced stuff</li>
+                        <li><strong>Community:</strong> Deep dives</li>
+                    </ul>
+
+                    <p><strong>Now build something amazing! 🚀</strong></p>
+                `
+            }
+        ];
+
+        const codeTemplates = [
+            `// JavaScript + Groq
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+async function askGroq(message) {
+    const response = await fetch(
+        'https://api.groq.com/api/v1/chat/completions',
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': \`Bearer \${GROQ_API_KEY}\`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'mixtral-8x7b-32768',
+                messages: [{ role: 'user', content: message }],
+                max_tokens: 500
+            })
+        }
+    );
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
+
+askGroq('What is Ollama?')
+    .then(answer => console.log(answer));`,
+
+            `# Python + Groq
+import os
+from groq import Groq
+
+api_key = os.getenv('GROQ_API_KEY')
+client = Groq(api_key=api_key)
+
+def ask_groq(message):
+    completion = client.chat.completions.create(
+        model="mixtral-8x7b-32768",
+        messages=[{"role": "user", "content": message}],
+        max_tokens=500
+    )
+    return completion.choices[0].message.content
+
+answer = ask_groq("Explain Ollama")
+print(answer)`,
+
+            `// Node.js + Groq SDK
+const Groq = require('groq-sdk');
+
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY
+});
+
+async function askGroq(message) {
+    const completion = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: message }],
+        model: 'mixtral-8x7b-32768',
+        max_tokens: 500
+    });
+
+    return completion.choices[0].message.content;
+}
+
+askGroq('What is Groq?')
+    .then(answer => console.log(answer));`,
+
+            `// Install Ollama from ollama.com
+// Then open Terminal and run:
+// ollama run llama-3.1:8b
+
+// Type your question and press Enter
+// Type /exit to quit`,
+
+            `// Open Terminal/Command Prompt
+// Run: ollama run llama-3.1:8b
+// 
+// Wait for download (first time only)
+// Then ask questions!`,
+
+            `// See templates above in lessons 1-3
+// Copy and paste into your project
+
+// Need help? Click 💬 (bottom right)`,
+
+            `// .env file example
+GROQ_API_KEY=gsk_your_actual_key
+DATABASE_URL=connection_string
+
+// Add .env to .gitignore!`,
+
+            `// Congratulations! 🎉
+// You finished Code Coach 1!
+// 
+// Now build something awesome with Groq + Ollama!
+// 
+// Questions? Use the AI Coach 💬`
+        ];
+
+        let currentLesson = 0;
+
+        function init() {
+            renderLesson();
+            addInitialChatMessage();
+        }
+
+        function renderLesson() {
+            const lesson = lessons[currentLesson];
+            document.getElementById('lessonInfo').textContent = `📌 Lesson ${currentLesson + 1}: ${lesson.shortInfo}`;
+            document.getElementById('codeEditor').value = codeTemplates[currentLesson] || '';
+            document.getElementById('outputContent').textContent = 'Output will appear here...';
+            
+            // Update active button
+            document.querySelectorAll('.lesson-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === currentLesson);
+            });
+        }
+
+        function switchLesson(index) {
+            currentLesson = index;
+            renderLesson();
+        }
+
+        function showLessonModal() {
+            const modal = document.getElementById('lessonModal');
+            const modalBody = document.getElementById('modalBody');
+            const lesson = lessons[currentLesson];
+            
+            modalBody.innerHTML = `
+                <div class="modal-header">
+                    <h2>${lesson.title}</h2>
+                    <button class="modal-close" onclick="closeLessonModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    ${lesson.content}
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeLessonModal() {
+            document.getElementById('lessonModal').classList.remove('active');
+        }
+
+        function downloadCode() {
+            const code = document.getElementById('codeEditor').value;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lesson-${currentLesson + 1}.txt`;
+            a.click();
+        }
+
+        function copyCode() {
+            const code = document.getElementById('codeEditor').value;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ Code copied!');
+            });
+        }
+
+        function toggleChat() {
+            document.getElementById('chatSidebar').classList.toggle('open');
+        }
+
+        function addInitialChatMessage() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = `<div class="message bot">👋 Hi! Ask me anything about this lesson.</div>`;
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML += `<div class="message user">${message}</div>`;
+            
+            input.value = '';
+            
+            setTimeout(() => {
+                const responses = [
+                    '📚 Great question!',
+                    '💡 Good thinking!',
+                    '✅ You got it!',
+                    '🔒 Security matters!',
+                    '🚀 Keep going!'
+                ];
+                
+                const response = responses[Math.floor(Math.random() * responses.length)];
+                chatMessages.innerHTML += `<div class="message bot">${response}</div>`;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 300);
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChat();
+            }
+        }
+
+        function closeCoachPopup() {
+            document.getElementById('coachPopup').style.display = 'none';
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
